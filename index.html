@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Power Wash Pro - Web3 Edition</title>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700;900&family=JetBrains+Mono:wght@400;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Web3 Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  
+  <style>
+    /* Include all your existing game CSS here */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --neon-cyan: #00f0ff;
+      --neon-pink: #ff0080;
+      --neon-purple: #b400ff;
+      --neon-green: #00ff88;
+      --dark-bg: #0a0a1a;
+      --card-bg: rgba(20, 20, 40, 0.95);
+    }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--dark-bg);
+      color: white;
+      padding: 2rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    /* Web3 Wallet Section */
+    .wallet-section {
+      background: var(--card-bg);
+      border: 2px solid var(--neon-cyan);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
+    }
+    
+    .wallet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .wallet-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .wallet-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      border: 2px solid var(--neon-pink);
+    }
+    
+    .wallet-address {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .wallet-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    
+    .wallet-stat {
+      background: rgba(0, 240, 255, 0.05);
+      border: 1px solid var(--neon-cyan);
+      border-radius: 8px;
+      padding: 0.75rem;
+      text-align: center;
+    }
+    
+    .wallet-stat-label {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 0.25rem;
+    }
+    
+    .wallet-stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--neon-green);
+    }
+    
+    .btn {
+      font-family: 'Exo 2', sans-serif;
+      font-weight: 700;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+    }
+    
+    .btn-connect {
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+      color: white;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+    }
+    
+    .btn-connect:hover {
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.8);
+      transform: translateY(-2px);
+    }
+    
+    .btn-claim {
+      background: linear-gradient(135deg, var(--neon-green), var(--neon-yellow));
+      color: var(--dark-bg);
+      width: 100%;
+      margin-top: 1rem;
+    }
+    
+    .btn-claim:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    /* NFT Cards */
+    .nft-gallery {
+      background: var(--card-bg);
+      border: 2px solid var(--neon-purple);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .nft-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .nft-card {
+      background: rgba(180, 0, 255, 0.1);
+      border: 2px solid var(--neon-purple);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .nft-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 25px rgba(180, 0, 255, 0.5);
+    }
+    
+    .nft-card.equipped {
+      border-color: var(--neon-green);
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+    }
+    
+    /* Notification */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--card-bg);
+      border: 2px solid var(--neon-green);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      box-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+      z-index: 10000;
+      max-width: 300px;
+    }
+    
+    .notification.show {
+      transform: translateX(0);
+    }
+    
+    .notification.error {
+      border-color: var(--neon-pink);
+      box-shadow: 0 0 30px rgba(255, 0, 128, 0.5);
+    }
+    
+    h1 {
+      font-family: 'Exo 2', sans-serif;
+      font-size: 2.5rem;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    h2 {
+      font-family: 'Exo 2', sans-serif;
+      color: var(--neon-cyan);
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>POWER WASH PRO</h1>
+  <p style="text-align: center; color: rgba(255,255,255,0.7); margin-bottom: 2rem;">Web3 Edition • Base Network</p>
+  
+  <!-- Wallet Section -->
+  <div class="wallet-section">
+    <div class="wallet-header">
+      <div id="walletConnected" style="display: none;" class="wallet-info">
+        <div class="wallet-avatar" id="walletAvatar">🎮</div>
+        <div>
+          <h3 style="color: var(--neon-cyan); margin-bottom: 0.25rem;">Connected</h3>
+          <div class="wallet-address" id="walletAddress">0x0000...0000</div>
+        </div>
+      </div>
+      <div id="walletDisconnected">
+        <button class="btn btn-connect" id="connectBtn">🔗 Connect Wallet</button>
+      </div>
+      <button class="btn" id="disconnectBtn" style="display: none; background: var(--neon-pink); color: white;">Disconnect</button>
+    </div>
+    
+    <div class="wallet-stats" id="walletStats" style="display: none;">
+      <div class="wallet-stat">
+        <div class="wallet-stat-label">$WASH Balance</div>
+        <div class="wallet-stat-value" id="washBalance">0</div>
+      </div>
+      <div class="wallet-stat">
+        <div class="wallet-stat-label">NFTs Owned</div>
+        <div class="wallet-stat-value" id="nftCount">0</div>
+      </div>
+      <div class="wallet-stat">
+        <div class="wallet-stat-label">Total Earned</div>
+        <div class="wallet-stat-value" id="totalEarned">0</div>
+      </div>
+      <div class="wallet-stat">
+        <div class="wallet-stat-label">Network</div>
+        <div class="wallet-stat-value">Base</div>
+      </div>
+    </div>
+
+    <button class="btn btn-claim" id="claimRewardsBtn" style="display: none;" disabled>
+      <span id="claimBtnText">🎁 Play to Earn Rewards</span>
+    </button>
+  </div>
+
+  <!-- NFT Gallery -->
+  <div class="nft-gallery" id="nftGallery" style="display: none;">
+    <h2>🎨 Your Power-Up NFTs</h2>
+    <div class="nft-grid" id="nftGrid">
+      <div style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.5);">
+        Connect wallet to view NFTs
+      </div>
+    </div>
+  </div>
+
+  <!-- Marketplace -->
+  <div class="nft-gallery" id="marketplace" style="display: none; border-color: var(--neon-pink);">
+    <h2 style="color: var(--neon-pink);">🏪 NFT Marketplace</h2>
+    <div id="marketplaceItems" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
+  </div>
+
+  <!-- Notification -->
+  <div class="notification" id="notification">
+    <div style="font-weight: 700; margin-bottom: 0.5rem;" id="notificationTitle">Success</div>
+    <div id="notificationMessage">Message</div>
+  </div>
+
+  <script>
+    // ============================================================================
+    // WEB3 CONFIGURATION
+    // ============================================================================
+    
+    const CONFIG = {
+      CHAIN_ID: 8453, // Base Mainnet
+      CHAIN_NAME: 'Base',
+      RPC_URL: 'https://mainnet.base.org',
+      BLOCK_EXPLORER: 'https://basescan.org',
+      
+      // IMPORTANT: Update these after deploying your contracts!
+      CONTRACTS: {
+        NFT: '0x0000000000000000000000000000000000000000',
+        TOKEN: '0x0000000000000000000000000000000000000000',
+        MARKETPLACE: '0x0000000000000000000000000000000000000000',
+        REWARDS: '0x0000000000000000000000000000000000000000',
+      },
+      
+      REWARD_PER_LEVEL: 100,
+    };
+
+    // ============================================================================
+    // STATE
+    // ============================================================================
+    
+    let provider = null;
+    let signer = null;
+    let userAddress = null;
+    
+    let web3State = {
+      connected: false,
+      washBalance: 0,
+      nftBalance: 0,
+      totalEarned: 0,
+      pendingRewards: 0,
+      ownedNFTs: [],
+    };
+    
+    let gameState = {
+      score: 0,
+      level: 1,
+    };
+
+    // ============================================================================
+    // CONTRACT ABIs (Simplified)
+    // ============================================================================
+    
+    const TOKEN_ABI = [
+      "function balanceOf(address) view returns (uint256)",
+      "function transfer(address, uint256) returns (bool)",
+    ];
+
+    // ============================================================================
+    // WEB3 FUNCTIONS
+    // ============================================================================
+    
+    async function connectWallet() {
+      try {
+        if (typeof window.ethereum === 'undefined') {
+          showNotification('Error', 'Please install MetaMask!', true);
+          return;
+        }
+        
+        showNotification('Connecting...', 'Please approve in your wallet');
+        
+        const accounts = await window.ethereum.request({ 
+          method: 'eth_requestAccounts' 
+        });
+        
+        userAddress = accounts[0];
+        
+        // Check network
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        if (parseInt(chainId, 16) !== CONFIG.CHAIN_ID) {
+          await switchNetwork();
+        }
+        
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        signer = provider.getSigner();
+        
+        web3State.connected = true;
+        updateWalletUI();
+        
+        // Simulate loading data
+        web3State.washBalance = 1250.50;
+        web3State.nftBalance = 3;
+        web3State.totalEarned = 5400;
+        web3State.ownedNFTs = [
+          { id: 1, name: '⭐ Rainbow Brush', rarity: 'Rare', boost: 25 },
+          { id: 2, name: '💎 Turbo Spray', rarity: 'Epic', boost: 50 },
+          { id: 3, name: '👑 Golden Washer', rarity: 'Legendary', boost: 100 },
+        ];
+        
+        updateWalletUI();
+        updateNFTGallery();
+        
+        showNotification('Connected!', `Welcome ${formatAddress(userAddress)}`);
+        
+      } catch (error) {
+        console.error('Connection error:', error);
+        showNotification('Error', error.message || 'Connection failed', true);
+      }
+    }
+    
+    async function switchNetwork() {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x' + CONFIG.CHAIN_ID.toString(16) }],
+        });
+      } catch (error) {
+        if (error.code === 4902) {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x' + CONFIG.CHAIN_ID.toString(16),
+              chainName: CONFIG.CHAIN_NAME,
+              rpcUrls: [CONFIG.RPC_URL],
+              nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+              blockExplorerUrls: [CONFIG.BLOCK_EXPLORER]
+            }],
+          });
+        }
+      }
+    }
+    
+    function disconnectWallet() {
+      provider = null;
+      signer = null;
+      userAddress = null;
+      web3State.connected = false;
+      updateWalletUI();
+      showNotification('Disconnected', 'Wallet disconnected');
+    }
+    
+    async function claimRewards() {
+      if (!web3State.connected || web3State.pendingRewards === 0) return;
+      
+      showNotification('Claiming...', 'Confirm transaction in wallet');
+      
+      // Simulate transaction
+      setTimeout(() => {
+        web3State.washBalance += web3State.pendingRewards;
+        web3State.totalEarned += web3State.pendingRewards;
+        showNotification('Success!', `Claimed ${web3State.pendingRewards.toFixed(2)} $WASH`);
+        web3State.pendingRewards = 0;
+        updateWalletUI();
+      }, 2000);
+    }
+
+    // ============================================================================
+    // UI FUNCTIONS
+    // ============================================================================
+    
+    function updateWalletUI() {
+      const connected = document.getElementById('walletConnected');
+      const disconnected = document.getElementById('walletDisconnected');
+      const disconnectBtn = document.getElementById('disconnectBtn');
+      const stats = document.getElementById('walletStats');
+      const claimBtn = document.getElementById('claimRewardsBtn');
+      const gallery = document.getElementById('nftGallery');
+      const marketplace = document.getElementById('marketplace');
+      
+      if (web3State.connected) {
+        connected.style.display = 'flex';
+        disconnected.style.display = 'none';
+        disconnectBtn.style.display = 'block';
+        stats.style.display = 'grid';
+        claimBtn.style.display = 'block';
+        gallery.style.display = 'block';
+        marketplace.style.display = 'block';
+        
+        document.getElementById('walletAddress').textContent = formatAddress(userAddress);
+        document.getElementById('walletAvatar').textContent = userAddress.slice(2, 4).toUpperCase();
+        document.getElementById('washBalance').textContent = web3State.washBalance.toFixed(2);
+        document.getElementById('nftCount').textContent = web3State.nftBalance;
+        document.getElementById('totalEarned').textContent = web3State.totalEarned.toFixed(0);
+        
+        const canClaim = web3State.pendingRewards > 0;
+        claimBtn.disabled = !canClaim;
+        document.getElementById('claimBtnText').textContent = 
+          canClaim ? `🎁 Claim ${web3State.pendingRewards.toFixed(2)} $WASH` : '🎁 Play to Earn';
+      } else {
+        connected.style.display = 'none';
+        disconnected.style.display = 'block';
+        disconnectBtn.style.display = 'none';
+        stats.style.display = 'none';
+        claimBtn.style.display = 'none';
+        gallery.style.display = 'none';
+        marketplace.style.display = 'none';
+      }
+    }
+    
+    function updateNFTGallery() {
+      const grid = document.getElementById('nftGrid');
+      
+      if (web3State.ownedNFTs.length === 0) {
+        grid.innerHTML = '<div style="text-align:center;padding:2rem;color:rgba(255,255,255,0.5)">No NFTs yet</div>';
+        return;
+      }
+      
+      grid.innerHTML = web3State.ownedNFTs.map(nft => `
+        <div class="nft-card" onclick="equipNFT(${nft.id})">
+          <div style="font-size:3rem;margin-bottom:0.5rem;">${nft.name.split(' ')[0]}</div>
+          <div style="font-weight:700;color:var(--neon-cyan);margin-bottom:0.25rem;">${nft.name}</div>
+          <div style="font-size:0.75rem;color:rgba(255,255,255,0.6);">${nft.rarity}</div>
+          <div style="color:var(--neon-green);margin-top:0.5rem;font-family:'JetBrains Mono';">+${nft.boost}% Boost</div>
+        </div>
+      `).join('');
+    }
+    
+    function equipNFT(id) {
+      const nft = web3State.ownedNFTs.find(n => n.id === id);
+      if (nft) {
+        showNotification('Equipped!', `${nft.name} - +${nft.boost}% boost active`);
+      }
+    }
+    
+    function populateMarketplace() {
+      const container = document.getElementById('marketplaceItems');
+      
+      const items = [
+        { name: '⭐ Turbo Brush', price: '0.02 ETH', rarity: 'Rare' },
+        { name: '💎 Combo Booster', price: '0.03 ETH', rarity: 'Epic' },
+        { name: '👑 Score Multiplier', price: '0.05 ETH', rarity: 'Legendary' },
+      ];
+      
+      container.innerHTML = items.map((item, i) => `
+        <div style="background:rgba(255,0,128,0.05);border:1px solid var(--neon-pink);border-radius:8px;padding:1rem;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:700;color:var(--neon-cyan);margin-bottom:0.25rem;">${item.name}</div>
+            <div style="color:var(--neon-green);font-family:'JetBrains Mono';font-size:0.9rem;">${item.price}</div>
+          </div>
+          <button class="btn" onclick="buyNFT(${i})" style="background:var(--neon-pink);color:white;padding:0.5rem 1rem;">Buy</button>
+        </div>
+      `).join('');
+    }
+    
+    function buyNFT(index) {
+      if (!web3State.connected) {
+        showNotification('Error', 'Please connect wallet first', true);
+        return;
+      }
+      showNotification('Buying...', 'Confirm transaction in wallet');
+      setTimeout(() => {
+        showNotification('Success!', 'NFT purchased successfully!');
+      }, 2000);
+    }
+    
+    function formatAddress(address) {
+      return `${address.slice(0, 6)}...${address.slice(-4)}`;
+    }
+    
+    function showNotification(title, message, isError = false) {
+      const notification = document.getElementById('notification');
+      document.getElementById('notificationTitle').textContent = title;
+      document.getElementById('notificationMessage').textContent = message;
+      
+      notification.className = 'notification' + (isError ? ' error' : '');
+      notification.classList.add('show');
+      
+      setTimeout(() => notification.classList.remove('show'), 5000);
+    }
+    
+    // Simulate earning rewards
+    setInterval(() => {
+      if (web3State.connected) {
+        web3State.pendingRewards += 0.5;
+        updateWalletUI();
+      }
+    }, 5000);
+
+    // ============================================================================
+    // EVENT LISTENERS
+    // ============================================================================
+    
+    document.getElementById('connectBtn').addEventListener('click', connectWallet);
+    document.getElementById('disconnectBtn').addEventListener('click', disconnectWallet);
+    document.getElementById('claimRewardsBtn').addEventListener('click', claimRewards);
+    
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', (accounts) => {
+        if (accounts.length === 0) disconnectWallet();
+        else { userAddress = accounts[0]; updateWalletUI(); }
+      });
+      
+      window.ethereum.on('chainChanged', () => window.location.reload());
+    }
+    
+    // ============================================================================
+    // INIT
+    // ============================================================================
+    
+    window.addEventListener('load', () => {
+      populateMarketplace();
+      if (window.ethereum && window.ethereum.selectedAddress) {
+        connectWallet();
+      }
+    });
+  </script>
+</body>
+</html>
